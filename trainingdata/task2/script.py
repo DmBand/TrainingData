@@ -1,39 +1,92 @@
-from pprint import pprint
+import os
 
 from bs4 import BeautifulSoup
 from PIL import Image, ImageDraw
 
-file1 = open('masks.xml')
 
-soup = BeautifulSoup(file1, parser='xml', features='lxml')
+def get_coordinates(figures):
+    all_coordinates = []
+    for figure in figures:
+        one = []
+        if figure['label'] == 'Ignore':
+            continue
+        else:
+            coord = figure['points'].split(';')
+            for value in coord:
+                tup = tuple(map(lambda num: float(num), value.split(',')))
+                one.append(tup)
+            all_coordinates.append(one)
+    return all_coordinates
 
-img = soup.find('image')
 
-im = Image.open('0810f8ff-0fe1-4b1c-b4cc-73b6d96a8c37.jpg')
+def get_image_tag(name: str, bs: BeautifulSoup):
+    for image_tag in bs.find_all('image'):
+        if name in image_tag['name']:
+            return image_tag
 
-pol_for_one_img = img.find_all()
-coordinates = []
-for img in pol_for_one_img:
-    one = []
-    coord = img['points'].split(';')
-    for value in coord:
-        tup = tuple(map(lambda num: float(num), value.split(',')))
-        one.append(tup)
-    coordinates.append(one)
-# print(coordinates)
 
-mask_im_rgba = Image.new('RGBA', im.size)
-mask_im_rgb = Image.new('RGB', im.size, 0)
-draw = ImageDraw.Draw(mask_im_rgba)
-draw2 = ImageDraw.Draw(mask_im_rgb)
+def draw_polygon(points: list,
+                 draw_rgb: ImageDraw,
+                 draw_rgba: ImageDraw,
+                 color: tuple = (162, 41, 232)) -> tuple:
+    for c in points:
+        draw_rgb.polygon(c, fill=color)
+        draw_rgba.polygon(c, fill=color)
+    return draw_rgb, draw_rgba
 
-for c in coordinates:
-    draw.polygon(c, fill=(162, 41, 232))
-    draw2.polygon(c, fill=(162, 41, 232))
-mask_im_rgb.save('mask.jpg')
-im_ = im.copy().convert('RGBA')
-im_.paste(mask_im_rgba, (0, 0), mask_im_rgba)
-im_.save('dima.png')
+
+with open('masks.xml') as masks:
+    images = os.listdir('images')
+    soup = BeautifulSoup(masks, parser='xml', features='lxml')
+    for image_name in images:
+        tag = get_image_tag(image_name, soup)
+        original_img = Image.open(f'images/{image_name}').copy()
+        pol_for_one_img = tag.find_all()
+        coordinates = get_coordinates(pol_for_one_img)
+        mask_im_rgba = Image.new('RGBA', original_img.size)
+        mask_im_rgb = Image.new('RGB', original_img.size, 0)
+        image_rgba = ImageDraw.Draw(mask_im_rgba)
+        image_rgb = ImageDraw.Draw(mask_im_rgb)
+        masks = draw_polygon(coordinates, image_rgb, image_rgba)
+        mask_im_rgb.save(f'new_images/mask_{image_name}.jpg')
+        original_img.paste(mask_im_rgba, (0, 0), mask_im_rgba)
+        original_img.save(f'new_images/with_mask_{image_name}.png')
+        original_img.close()
+
+# file1 = open('masks.xml')
+# # teg = get_image_tag(file1, '0810f8ff-0fe1-4b1c-b4cc-73b6d96a8c37.jpg')
+# # print(teg['name'])
+#
+# soup = BeautifulSoup(file1, parser='xml', features='lxml')
+#
+# img = soup.find('image')
+#
+# im = Image.open('0810f8ff-0fe1-4b1c-b4cc-73b6d96a8c37.jpg')
+#
+# pol_for_one_img = img.find_all()
+# coordinates = []
+# for img in pol_for_one_img:
+#     one = []
+#     coord = img['points'].split(';')
+#     for value in coord:
+#         tup = tuple(map(lambda num: float(num), value.split(',')))
+#         one.append(tup)
+#     coordinates.append(one)
+# # print(coordinates)
+#
+# mask_im_rgba = Image.new('RGBA', im.size)
+# mask_im_rgb = Image.new('RGB', im.size, 0)
+# draw = ImageDraw.Draw(mask_im_rgba)
+# draw2 = ImageDraw.Draw(mask_im_rgb)
+# for c in coordinates:
+#     draw.polygon(c, fill=(162, 41, 232))
+#     draw2.polygon(c, fill=(162, 41, 232))
+# mask_im_rgb.save('mask.jpg')
+# im_ = im.copy().convert('RGBA')
+# im_.paste(mask_im_rgba, (0, 0), mask_im_rgba)
+# im_.save('dima.png')
+
+
 # #
 # text = [(421.50,731.97), (419.35,730.54), (417.06,729.39), (414.77,728.39), (412.47,727.67),
 #         (410.18,726.81), (408.03,726.09), (405.74,725.38), (403.45,724.95), (402.87,727.10),
@@ -51,7 +104,7 @@ im_.save('dima.png')
 # pprint(text)
 # draw.polygon(text2, fill=255)
 # draw.polygon(text, fill=255)
-# mask_im.save('new.jpg')
+# mask_im.save('new_images2.jpg')
 
 # pol = img.find_all()[0]
 # coord = pol['points'].split(';')
@@ -59,8 +112,8 @@ im_.save('dima.png')
 # coord3 = [(float(i[0]), float(i[1])) for i in coord2]
 # print(coord3)
 # # print(coord3)
-# mask_im = Image.new('L', im.size, 112)
+# mask_im = Image.new_images2('L', im.size, 112)
 # draw = ImageDraw.Draw(mask_im)
 # draw.polygon(coord3, fill=255)
-# mask_im.save('new.jpg')
+# mask_im.save('new_images2.jpg')
 # '162.0, 41.0, 232.0'
