@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 file1 = open('annotations.xml')
 file2 = open('annotations-2.xml')
 file3 = open('annotations-3.xml')
-new_file = open('new.xml', 'w')
+new_file = open('new_images2.xml', 'w')
 
 soup = BeautifulSoup(file1, parser='xml', features='lxml')
 image_tag = soup.find_all('image')
