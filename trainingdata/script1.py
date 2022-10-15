@@ -4,7 +4,7 @@ file1 = open('annotations.xml')
 file2 = open('annotations-2.xml')
 file3 = open('annotations-3.xml')
 
-soup = BeautifulSoup(file1, parser='xml', features='lxml')
+soup = BeautifulSoup(file3, parser='xml', features='lxml')
 
 image_tag = soup.find_all('image')
 # 1. Всего изображений
@@ -51,15 +51,15 @@ for tag in image_tag[1:]:
     elif tag_area == smallest_area:
         statistics['smallest']['count'] += 1
 
-# print(number_of_images)
-# print(marked_up_images)
-# print(not_marked_up_images)
-# print(number_of_figures)
-# print('Самое большое изображение:\n'
-#       f'ширина: {statistics["biggest"]["width"]}, '
-#       f'высота: {statistics["biggest"]["height"]}, '
-#       f'количество: {statistics["biggest"]["count"]}\n'
-#       'Самое маленькое изображение:\n'
-#       f'ширина: {statistics["smallest"]["width"]}, '
-#       f'высота: {statistics["smallest"]["height"]}, '
-#       f'количество: {statistics["smallest"]["count"]}')
+print(f'Всего изображений: {number_of_images}')
+print(f'Всего размечено изображений: {marked_up_images}')
+print(f'Количество неразмеченных изображений: {not_marked_up_images}')
+print(f'Количество фигур: {number_of_figures}')
+print('Самое большое изображение:\n'
+      f'ширина: {statistics["biggest"]["width"]}, '
+      f'высота: {statistics["biggest"]["height"]}, '
+      f'количество: {statistics["biggest"]["count"]}\n'
+      'Самое маленькое изображение:\n'
+      f'ширина: {statistics["smallest"]["width"]}, '
+      f'высота: {statistics["smallest"]["height"]}, '
+      f'количество: {statistics["smallest"]["count"]}')
