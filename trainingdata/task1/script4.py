@@ -1,3 +1,5 @@
+import os
+
 from bs4 import BeautifulSoup
 
 
@@ -28,17 +30,16 @@ def main(path: str, path_for_save: str = None) -> None:
     if path_for_save:
         new_path = f'{path_for_save}/new_{name}'
     else:
-        new_path = f'new_{name}.xml'
+        new_path = f'new_{name}'
 
     with open(new_path, 'w') as new_file:
         new_file.write(soup.prettify())
 
 
 if __name__ == '__main__':
-    files = [
-        'annotations.xml',
-        'annotations-2.xml',
-        'annotations-3.xml'
-    ]
+    files = os.listdir('annotations')
     for f in files:
-        main(path=f)
+        main(
+            path=f'annotations/{f}',
+            path_for_save='new_annotations'
+        )

@@ -1,3 +1,5 @@
+import os
+
 from bs4 import BeautifulSoup
 
 
@@ -26,11 +28,7 @@ def main(path: str) -> None:
 
 
 if __name__ == '__main__':
-    files = [
-        'annotations.xml',
-        'annotations-2.xml',
-        'annotations-3.xml'
-    ]
+    files = os.listdir('annotations')
     for f in files:
         print(f'\n------------- {f} -------------')
-        main(path=f)
+        main(path=f'annotations/{f}')
