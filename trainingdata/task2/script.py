@@ -1,15 +1,15 @@
 import os
 
-from bs4 import (BeautifulSoup,
-                 Tag,
-                 ResultSet)
+from bs4 import BeautifulSoup, Tag
 from PIL import Image, ImageDraw
 
 
 def get_image_tag(name: str, bs: BeautifulSoup) -> Tag:
     """
-    Возвращает тег изображения,
-    имя которого соответствует параметру "name"
+    Находит и возвращает соответствующий тег изображения
+    с именем "name".
+    :param name: Параметр name у тега изображения.
+    :param bs: Экземпляр класса BeautifulSoup
     """
 
     for image_tag in bs.find_all('image'):
@@ -17,10 +17,11 @@ def get_image_tag(name: str, bs: BeautifulSoup) -> Tag:
             return image_tag
 
 
-def get_coordinates(figures: ResultSet) -> list:
+def get_coordinates(figures: list) -> list:
     """
     Возвращает полный список координат
-    для одного изображения
+    для одного изображения.
+    :param figures: Список необработанных координат.
     """
 
     all_coordinates = []
@@ -31,9 +32,10 @@ def get_coordinates(figures: ResultSet) -> list:
         else:
             coord = figure['points'].split(';')
             for value in coord:
-                coord = tuple(map(lambda num: float(num), value.split(',')))
+                coord = tuple(map(float, value.split(',')))
                 one_figure_coordinates.append(coord)
             all_coordinates.append(one_figure_coordinates)
+
     return all_coordinates
 
 
@@ -42,7 +44,11 @@ def draw_polygon(points: list,
                  draw_rgba: ImageDraw,
                  color: tuple = (162, 41, 232)) -> None:
     """
-    Рисует два многоугольника по заданным координатам
+    Рисует два многоугольника по заданным координатам.
+    :param points: Список координат.
+    :param draw_rgb: Многоугольник на черном фоне.
+    :param draw_rgba: Многоугольник на прозрачном фоне.
+    :param color: Цвет заполнения маски
     """
 
     for c in points:
@@ -52,21 +58,21 @@ def draw_polygon(points: list,
 
 def main(original_images_path: str,
          new_images_path: str,
-         masks_path: str) -> None:
+         mask_path: str) -> None:
     """
     :param original_images_path: Путь к папке, в которой
     хранятся необработанные изображения.
     :param new_images_path: Путь к папке, в которой
     хранятся обработанные изображения и маски.
-    :param masks_path: Путь к файлу с разметкой масок
+    :param mask_path: Путь к файлу с разметкой масок
     """
 
-    with open(masks_path) as masks:
+    with open(mask_path) as masks:
         images = os.listdir(original_images_path)
         soup = BeautifulSoup(masks, parser='xml', features='lxml')
         for image_name in images:
             tag = get_image_tag(image_name, soup)
-            original_img = Image.open(f'images/{image_name}').copy()
+            original_img = Image.open(f'{original_images_path}/{image_name}').copy()
             polygon_for_one_img = tag.find_all()
             coordinates = get_coordinates(polygon_for_one_img)
 
@@ -80,11 +86,16 @@ def main(original_images_path: str,
 
             # Сохраняем новую маску и фото с наложенной маской.
             # Названия файлов содержат префиксы mask_ и with_mask_ соответственно
-            mask_im_rgb.save(f'{new_images_path}/mask_{image_name}.jpg')
+            mask_im_rgb.save(f'{new_images_path}/mask_{image_name}', format='jpeg')
             original_img.paste(mask_im_rgba, (0, 0), mask_im_rgba)
-            original_img.save(f'{new_images_path}/with_mask_{image_name}.png')
+            name = image_name.split('.')[-2]
+            original_img.save(f'{new_images_path}/with_mask_{name}.png', format='png')
             original_img.close()
 
 
 if __name__ == '__main__':
-    main('images', 'new_images', 'masks.xml')
+    main(
+        original_images_path='images',
+        new_images_path='new_images',
+        mask_path='masks.xml'
+    )
