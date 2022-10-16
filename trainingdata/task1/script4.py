@@ -1,21 +1,44 @@
 from bs4 import BeautifulSoup
 
-file1 = open('annotations.xml')
-file2 = open('annotations-2.xml')
-file3 = open('annotations-3.xml')
-new_file = open('new_images2.xml', 'w')
 
-soup = BeautifulSoup(file1, parser='xml', features='lxml')
-image_tag = soup.find_all('image')
-image_ids = [img['id'] for img in image_tag]
+def main(path: str, path_for_save: str = None) -> None:
+    """
+    Открывает файл, изменяет его и сохраняет в новый файл,
+    добавляя к названию префикс "new_"
+    :param path: Путь к оригинальному файлу.
+    :param path_for_save: Путь, по которому необходимо
+    сохранить новый файл. Если None, то файл будет сохранен
+    в текущей директории
+    """
 
-position = -1
-for img in image_tag:
-    img['id'] = image_ids[position]
-    position -= 1
-    current_name = img['name'].split('/')[-1]
-    new_name = current_name.split('.')[0] + '.png'
-    img['name'] = new_name
+    with open(path) as file:
+        soup = BeautifulSoup(file, parser='xml', features='lxml')
+        image_tag = soup.find_all('image')
+        image_ids = [img['id'] for img in image_tag]
 
-new_file.write(soup.prettify())
-new_file.close()
+        position = -1
+        for img in image_tag:
+            img['id'] = image_ids[position]
+            position -= 1
+            current_name = img['name'].split('/')[-1]
+            new_name = current_name.split('.')[0] + '.png'
+            img['name'] = new_name
+
+    name = path.split('/')[-1]
+    if path_for_save:
+        new_path = f'{path_for_save}/new_{name}'
+    else:
+        new_path = f'new_{name}.xml'
+
+    with open(new_path, 'w') as new_file:
+        new_file.write(soup.prettify())
+
+
+if __name__ == '__main__':
+    files = [
+        'annotations.xml',
+        'annotations-2.xml',
+        'annotations-3.xml'
+    ]
+    for f in files:
+        main(path=f)
