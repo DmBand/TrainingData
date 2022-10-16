@@ -78,18 +78,18 @@ def main(original_images_path: str,
 
             # RGB - для сохранения маски на черном фоне,
             # RGBA - для наложения маски на изображение
-            mask_im_rgb = Image.new('RGB', original_img.size, 0)
-            mask_im_rgba = Image.new('RGBA', original_img.size)
-            image_rgb = ImageDraw.Draw(mask_im_rgb)
-            image_rgba = ImageDraw.Draw(mask_im_rgba)
+            im_rgb_base = Image.new('RGB', original_img.size, 0)
+            im_rgba_base = Image.new('RGBA', original_img.size)
+            image_rgb = ImageDraw.Draw(im_rgb_base)
+            image_rgba = ImageDraw.Draw(im_rgba_base)
             draw_polygon(coordinates, image_rgb, image_rgba)
 
             # Сохраняем новую маску и фото с наложенной маской.
             # Названия файлов содержат префиксы mask_ и with_mask_ соответственно
-            mask_im_rgb.save(f'{new_images_path}/mask_{image_name}', format='jpeg')
-            original_img.paste(mask_im_rgba, (0, 0), mask_im_rgba)
-            name = image_name.split('.')[-2]
-            original_img.save(f'{new_images_path}/with_mask_{name}.png', format='png')
+            im_rgb_base.save(f'{new_images_path}/mask_{image_name}', format='jpeg')
+            original_img.paste(im_rgba_base, (0, 0), im_rgba_base)
+            original_img.convert('RGB')
+            original_img.save(f'{new_images_path}/with_mask_{image_name}', format='jpeg')
             original_img.close()
 
 
