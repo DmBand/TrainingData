@@ -17,7 +17,7 @@ def get_image_tag(name: str, bs: BeautifulSoup) -> Tag:
             return image_tag
 
 
-def get_coordinates(figures: list) -> list:
+def get_coordinates(figures: list) -> tuple:
     """
     Возвращает полный список координат
     для одного изображения.
@@ -25,27 +25,30 @@ def get_coordinates(figures: list) -> list:
     """
 
     all_coordinates = []
+    ignore_coords = []
     for figure in figures:
         one_figure_coordinates = []
-        if figure['label'] == 'Ignore':
-            continue
-        else:
-            coord = figure['points'].split(';')
-            for value in coord:
-                coord = tuple(map(float, value.split(',')))
-                one_figure_coordinates.append(coord)
-            all_coordinates.append(one_figure_coordinates)
+        coord = figure['points'].split(';')
+        for value in coord:
+            coord = tuple(map(float, value.split(',')))
+            one_figure_coordinates.append(coord)
+            if figure['label'].lower() == 'ignore':
+                ignore_coords.append(one_figure_coordinates)
+            else:
+                all_coordinates.append(one_figure_coordinates)
 
-    return all_coordinates
+    return all_coordinates, ignore_coords
 
 
 def draw_polygon(points: list,
+                 ignore_points: list,
                  draw_rgb: ImageDraw,
                  draw_rgba: ImageDraw,
                  color: tuple = (162, 41, 232)) -> None:
     """
     Рисует два многоугольника по заданным координатам.
     :param points: Список координат.
+    :param ignore_points: Список ignore-координат.
     :param draw_rgb: Многоугольник на черном фоне.
     :param draw_rgba: Многоугольник на прозрачном фоне.
     :param color: Цвет заполнения маски
@@ -54,6 +57,10 @@ def draw_polygon(points: list,
     for c in points:
         draw_rgb.polygon(c, fill=color)
         draw_rgba.polygon(c, fill=color)
+
+    for c in ignore_points:
+        draw_rgb.polygon(c, fill=(0, 0, 0))
+        draw_rgba.polygon(c, fill=(0, 0, 0))
 
 
 def main(original_images_path: str,
@@ -82,8 +89,12 @@ def main(original_images_path: str,
             im_rgba_base = Image.new('RGBA', original_img.size)
             image_rgb = ImageDraw.Draw(im_rgb_base)
             image_rgba = ImageDraw.Draw(im_rgba_base)
-            draw_polygon(coordinates, image_rgb, image_rgba)
-
+            draw_polygon(
+                coordinates[0],
+                coordinates[1],
+                image_rgb,
+                image_rgba
+            )
             # Сохраняем новую маску и фото с наложенной маской.
             # Названия файлов содержат префиксы mask_ и with_mask_ соответственно
             im_rgb_base.save(f'{new_images_path}/mask_{image_name}', format='jpeg')
@@ -97,5 +108,5 @@ if __name__ == '__main__':
     main(
         original_images_path='images',
         new_images_path='new_images',
-        mask_path='masks.xml'
+        mask_path='annotations.xml'
     )
