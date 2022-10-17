@@ -26,7 +26,7 @@ def main(path: str, path_for_save: str = None) -> None:
             new_name = current_name.split('.')[0] + '.png'
             img['name'] = new_name
 
-    name = path.split('/')[-1]
+    name = os.path.basename(path)
     if path_for_save:
         new_path = f'{path_for_save}/new_{name}'
     else:
